@@ -296,12 +296,30 @@ export function Dashboard() {
         return;
       }
 
-      const emailPrefix = newEmail.trim() || Math.random().toString(36).substring(2, 8);
+      // Validate username (only alphanumeric characters allowed)
+      const inputUsername = newEmail.trim();
+      if (inputUsername && !/^[a-zA-Z0-9]+$/.test(inputUsername)) {
+        setError('Username can only contain letters and numbers');
+        return;
+      }
+
+      const emailPrefix = inputUsername || Math.random().toString(36).substring(2, 8);
       const fullEmail = `${emailPrefix}@${selectedDomainObj.domain}`;
-      const requestData = { email: fullEmail, domainId: selectedDomain };
+      
+      // Define proper type for request data
+      interface RequestData {
+        email: string;
+        domainId: string;
+        captchaResponse?: string;
+      }
+      
+      const requestData: RequestData = { 
+        email: fullEmail, 
+        domainId: selectedDomain 
+      };
       
       if (captchaResponse) {
-        requestData['captchaResponse'] = captchaResponse;
+        requestData.captchaResponse = captchaResponse;
       }
 
       const response = await axios.post(
@@ -455,7 +473,11 @@ export function Dashboard() {
             <input
               type="text"
               value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
+              onChange={(e) => {
+                // Only allow alphanumeric characters (letters and numbers)
+                const alphanumericOnly = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                setNewEmail(alphanumericOnly);
+              }}
               placeholder="Enter username (optional)"
               className={`w-48 rounded-l-lg border-r-0 border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
                 isDark ? 'bg-gray-700 text-white border-gray-600' : ''
